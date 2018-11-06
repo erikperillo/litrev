@@ -16,10 +16,6 @@ import util
 import config as cfg
 
 
-#maximum number of names that are not last names to be used. can be None
-DEF_MAX_N_NONLAST_NAMES = 0
-
-
 def get_all_nodes(graph):
     all_nodes = set(graph.keys())
     #all_nodes |= reduce(lambda a, b: set(a) | set(b), graph.values(), set())

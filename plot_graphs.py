@@ -20,7 +20,7 @@ import config as cfg
 
 #maximum number of nodes to plot. will select the most cited nodes
 MAX_N_AUTHOR_NODES = 64
-MAX_N_TITLE_NODES = 32
+MAX_N_TITLE_NODES = 48
 #relabel titles/authors to use number instead of the title
 RELABEL_TITLES = False
 RELABEL_AUTHORS = False
@@ -111,7 +111,7 @@ def unit_norm_hist(hist):
 def get_node_sizes(nx_graph, hist):
     hist = unit_norm_hist(hist)
     nodes = list(nx_graph.nodes())
-    sizes = [int(100 + 2000*hist[n]) for n in nodes]
+    sizes = [int(128 + 4096*hist[n]) for n in nodes]
     return sizes
 
 
@@ -148,6 +148,8 @@ def plot_nx_graph(graph, hist, **kwargs):
         font_color='black',
         **kwargs,
     )
+    if kwargs.get('title') is not None:
+        ax.set_title(kwargs['title'])
     ax.grid(False)
     ax.set_xticks([])
     ax.set_yticks([])
@@ -155,7 +157,7 @@ def plot_nx_graph(graph, hist, **kwargs):
     return fig, ax
 
 
-def plot_graph(graph, hist, relabel=False, max_n_nodes=None):
+def plot_graph(graph, hist, relabel=False, max_n_nodes=None, title=None):
     graph = reduce_graph(graph, hist, max_n_nodes)
     if relabel:
         graph, mapping = relabel_graph(graph)
@@ -163,7 +165,8 @@ def plot_graph(graph, hist, relabel=False, max_n_nodes=None):
     else:
         mapping = None
     nx_graph = get_nx_graph(graph)
-    fig, ax = plot_nx_graph(nx_graph, hist)
+    fig, ax = plot_nx_graph(nx_graph, hist,
+        title='citation graph (top {} cited nodes)'.format(max_n_nodes))
     return fig, ax, mapping
 
 
