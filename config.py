@@ -83,6 +83,11 @@ paths['titles-graph-plot-mapping'] = os.path.join(
 paths['authors-graph-plot-mapping'] = os.path.join(
     paths['data-dir'], 'authors-graph-plot-mapping.json')
 
+#dir to get data of occurences over years
+paths['occurrences-over-years-data-dir'] = os.path.join(
+    paths['data-dir'], 'attention-themed-papers-over-years')
+paths['occurrences-over-years-plots-dir'] = paths['data-dir']
+
 #path to script that extracts raw references strings from pdfs
 extract_refs_script_path = os.path.join(_file_dir, 'extractrefs.py')
 
