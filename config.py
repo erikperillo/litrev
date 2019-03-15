@@ -91,5 +91,9 @@ paths['occurrences-over-years-plots-dir'] = paths['data-dir']
 #path to script that extracts raw references strings from pdfs
 extract_refs_script_path = os.path.join(_file_dir, 'extractrefs.py')
 
+#path to dir to save pubs search results
+paths['search-pubs-results-dir'] = os.path.join(
+    paths['data-dir'], 'search-pubs-results')
+
 #number of threads to use on scripts that use parallelism
 n_threads = 8

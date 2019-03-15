@@ -211,3 +211,12 @@ def normalize_title(title):
         tokens = [tok for tok in tokens if not term in tok]
     title = '-'.join(tokens)
     return title
+
+
+def mk_dir_if_needed(path):
+    if not os.path.isdir(path):
+        os.makedirs(path)
+
+
+def mk_dirname_if_needed(path):
+    mk_dir_if_needed(os.path.dirname(path))

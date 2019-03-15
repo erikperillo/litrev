@@ -1,4 +1,7 @@
 data/
+papers-infos/chromedriver
+papers-infos/results/
+papers-infos/titles.csv
 *.pyo
 *.pyc
 __pycache__/
