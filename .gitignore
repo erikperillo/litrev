@@ -6,3 +6,4 @@ papers-infos/titles.csv
 *.pyc
 __pycache__/
 venv/
+*.swp

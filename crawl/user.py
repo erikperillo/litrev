@@ -2,8 +2,10 @@
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
+from selenium.webdriver.common.keys import Keys
 from requests.utils import urlparse
 import datetime as dt
+import time
 import os
 
 _FILE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -78,6 +80,11 @@ class User:
         self.info('acessing "{}"...'.format(url), flush=True, end=' ')
         access(self.driver, url, refresh=refresh)
         self.info('done.')
+
+
+    def scroll_to_bottom(self):
+        html = self.driver.find_element_by_tag_name('html')
+        html.send_keys(Keys.END)
 
 
 class ArxivUser(User):
@@ -240,3 +247,157 @@ class ArxivUser(User):
                 raise e
             self.info('ERROR: {}'.format(e))
         return data
+
+
+class DblpUser(User):
+    def _get_pub_list_elem(self):
+        elem = self.driver.find_element_by_class_name('publ-list')
+        return elem
+
+
+    def _get_pub_elems(self):
+        pub_list_elem = self._get_pub_list_elem()
+        elems = pub_list_elem.find_elements_by_class_name('entry')
+        return elems
+
+
+    def get_all_pub_elems(self, wait_time=3, n_retries=5):
+        elems = set()
+        no_new_elems_counter = 0
+        while True:
+            elems_ = set(self._get_pub_elems())
+            diff = elems_ - elems
+            if not diff:
+                no_new_elems_counter += 1
+                if no_new_elems_counter >= n_retries:
+                    break
+            else:
+                no_new_elems_counter = 0
+            elems |= diff
+            self.scroll_to_bottom()
+            time.sleep(wait_time)
+        return list(elems)
+
+
+    def _get_bibtex_elem(self, pub_elem):
+        elems = pub_elem.find_elements_by_class_name('drop-down')
+        for elem in elems:
+            a = elem.find_element_by_tag_name('a')
+            text = a.get_attribute('href')
+            if '/bibtex/' in text:
+                return a
+        raise ValueError('no bibtex elem found')
+
+
+    def get_bibtex_link(self, pub_elem):
+        elem = self._get_bibtex_elem(pub_elem)
+        text = elem.get_attribute('href')
+        link = text.replace('/bibtex/', '/bib2/') + '.bib'
+        return link
+
+
+class MsAiUser(User):
+    def _get_results_elem(self):
+        elem = self.driver.find_element_by_class_name(
+            'msr-faceted-search-results__items')
+        return elem
+
+
+    def get_pub_elems(self):
+        results_elem = self._get_results_elem()
+        elems = results_elem.find_elements_by_tag_name('article')
+        return elems
+
+
+    def _get_pub_link_elem(self, pub_elem):
+        elem = pub_elem.find_element_by_class_name('card__link')
+        return elem
+
+
+    def access_pub_page(self, pub_elem):
+        elem = self._get_pub_link_elem(pub_elem)
+        click(elem)
+
+
+    def _get_bibtex_link_elem(self):
+        elem = self.driver.find_element_by_class_name('bibtex-link')
+        elem = elem.find_element_by_tag_name('a')
+        return elem
+
+
+    def download_bibtex(self):
+        try:
+            elem = self._get_bibtex_link_elem()
+        except NoSuchElementException:
+            print('WARNING: could not find bibtex link')
+            return
+        click(elem)
+
+
+    def _get_next_btn_elem(self):
+        elem = self.driver.find_element_by_class_name('next')
+        return elem
+
+
+    def go_to_next_page(self, wait_time=10):
+        try:
+            elem = self._get_next_btn_elem()
+        except:
+            return False
+        click(elem)
+        time.sleep(wait_time)
+        return True
+
+
+class AbstractGetter(User):
+    def _get_acm_dl_abstract(self):
+        elem = self.driver.find_element_by_id('abstract-body')
+        return elem.text
+
+
+    def _get_springer_abstract(self):
+        elem = self.driver.find_element_by_id('Abs1')\
+            .find_element_by_class_name('Para')
+        return elem.text
+
+
+    def _get_ieeexplore_abstract(self):
+        elem = self.driver.find_element_by_class_name('abstract-text')
+        return elem.text.lstrip('Abstract:').strip()
+
+
+    def _get_sciencedirect_abstract(self):
+        elem = self.driver.find_element_by_id('abspara0010')
+        return elem.text
+
+
+    def _get_aaai_abstract(self):
+        elem = self.driver.find_element_by_id('abstract')
+        return elem.text
+
+
+    def _get_abstract_generic(self):
+        try:
+            elem = self.driver.find_element_by_id('abstract')
+        except:
+            try:
+                elem = self.driver.find_element_by_class_name('abstract')
+            except:
+                raise
+        return elem.text
+
+
+    def get_abstract(self):
+        for method_name in [
+            '_get_ieeexplore_abstract',
+            '_get_acm_dl_abstract',
+            '_get_springer_abstract',
+            '_get_sciencedirect_abstract',
+            '_get_aaai_abstract',
+            '_get_abstract_generic',
+        ]:
+            try:
+                return getattr(self, method_name)()
+            except:
+                continue
+        return None
