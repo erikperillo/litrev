@@ -194,7 +194,3 @@ class User:
             'query_match': query_match,
             'n_citations': n_citations,
         }
-
-
-
-
